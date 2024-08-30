@@ -21,12 +21,13 @@ int main(int argc, char **argv, char **env)
 	ssize_t nread;
 	char *argv_exec[2];
 	char **environ = env;
+	int running = 1;
 
 	(void)argc;
 	(void)argv;
 
 
-	while (1)
+	while (running)
 	{
 		write(STDOUT_FILENO, "simple_shell$ ", 14);
 		fflush(stdout);
@@ -34,6 +35,7 @@ int main(int argc, char **argv, char **env)
 		if (nread == -1)
 		{
 			write(STDOUT_FILENO, "\n", 1);
+			running = 0;
 			break;
 		}
 
