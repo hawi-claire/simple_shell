@@ -1,106 +1,48 @@
-#include "main.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
-#include <sys/uio.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <fcntl.h>
-
+#include <sys/wait.h>
+#include <signal.h>
 /**
-* main - entry point to simple_shell program
-* @argc: number of arguments
-* @argv: an array of arguments
-* @env: the environment
-*
-* Return: Always 0 (Success)
-*/
-
-int main(int argc, char *argv[], char *env[])
+ * main - program runs the shell
+ * @argc: number of arguments
+ * @argv: an array of arguments
+ * @env: pointer to an array of env variables
+ *
+ * Return: 0 on success, 1 on error
+ */
+int main(int argc, char **argv, char **env)
 {
+
 	char *line = NULL;
-	char *command = NULL;
-	char *path = NULL, **path_tokens = NULL, *path_copy = NULL;
-	int path_length;
-	pid_t pid;
-	int status;
-	int interactive = isatty(STDIN_FILENO);
+	size_t len = 0;
+	ssize_t nread;
+	char **environ = env;
 
-
-	(void)argc;
-
-	/* if (argc != 1) */
-		/* exit(0); fix this */
-
-	path = find_path(env);
-
-	if (path)
+	while (1)
 	{
-		path_length = _strlen(path) + 1;
-		path_copy = malloc(path_length);
-
-		if (!path_copy)
-			return (1); /* fix this */
-
-		_strcpy(path_copy, path);
-		path_tokens = tokenize(path_copy, ":");
-	}
-
-	while(1)
-	{
-		if (interactive)
-			write(STDOUT_FILENO, "$ ", 2);
-
-		line = get_line(STDIN_FILENO);
-		if (line == NULL)
+		write(STDOUT_FILENO, "simple_shell$ ", 14);
+		fflush(stdout);
+		nread = getline(&line, &len, stdin);
+		if (nread == -1)
 		{
-			if (interactive)
-				write(STDOUT_FILENO, "\n", 1);
+			write(STDOUT_FILENO, "\n", 1);
 			break;
 		}
 
-		line[strcspn(line, "\n")] = '\0';
-
-		if (strlen(line) == 0)
+		if (line[nread - 1] == '\n')
 		{
-			free(line);
-			continue;
+			line[nread - 1] = '\0';
 		}
 
-		command = find_command_in_path(line, path_tokens);
-		if (!command)
+		if (execve(line, NULL, environ) == -1)
 		{
-			command = line;
+			perror("execve");
 		}
 
-		pid = fork();
-		if (pid == -1)
-		{
-			perror("fork");
-			free(line);
-			continue;
-		}
-
-		if (pid == 0)
-		{
-			if (execve(command, argv, env) == -1)
-			{
-				perror(command);
-				free(line);
-				exit(EXIT_FAILURE);
-			}
-		}
-
-		else
-		{
-			wait(&status);
-			free(line);
-		}
+		free(line);
 	}
 
-	free(path_copy);
-	if (path_tokens != NULL)
-		free_grid(path_tokens);
-
-	return(0);
+	return (0);
 }
