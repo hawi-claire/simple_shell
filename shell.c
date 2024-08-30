@@ -22,6 +22,10 @@ int main(int argc, char **argv, char **env)
 	char *argv_exec[2];
 	char **environ = env;
 
+	(void)argc;
+	(void)argv;
+
+
 	while (1)
 	{
 		write(STDOUT_FILENO, "simple_shell$ ", 14);
