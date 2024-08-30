@@ -18,6 +18,7 @@ int main(int argc, char **argv, char **env)
 	char *line = NULL;
 	size_t len = 0;
 	ssize_t nread;
+	char *argv_exec[2];
 	char **environ = env;
 
 	while (1)
@@ -35,13 +36,16 @@ int main(int argc, char **argv, char **env)
 		{
 			line[nread - 1] = '\0';
 		}
+		argv_exec[0] = line;
+		argv_exec[1] = NULL;
 
-		if (execve(line, NULL, environ) == -1)
+		if (execve(argv_exec[0], argv_exec, environ) == -1)
 		{
 			perror("execve");
 		}
 
 		free(line);
+		line = NULL;
 	}
 
 	return (0);
